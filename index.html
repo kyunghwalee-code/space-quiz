@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#183e38">
+	<title>오르빗 아카데미 | 우주 탐험 퀴즈</title>
+	<style>
+		:root { color-scheme: light; --ink: #172f2c; --muted: #526561; --green: #245c4e; --lime: #d7f870; --paper: #f1f5f3; --line: #cbd7d1; --red: #a52e38; }
+		* { box-sizing: border-box; }
+		body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Trebuchet MS", sans-serif; font-size: 16px; line-height: 1.5; }
+		button { font: inherit; cursor: pointer; }
+		button:disabled { cursor: default; }
+		button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid #1268c4; outline-offset: 5px; }
+		[hidden] { display: none !important; }
+		.skip { position: absolute; top: -80px; left: 16px; background: white; padding: 12px; z-index: 5; color: var(--ink); }
+		.skip:focus { top: 12px; }
+		.topbar { max-width: 1280px; margin: auto; padding: 25px 48px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); }
+		.brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: bold; }
+		.brand-mark { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--lime); font-size: 25px; }
+		.edition { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+		main { max-width: 1280px; margin: auto; padding: 48px; }
+		.intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 32px; }
+		.eyebrow { font-size: 12px; font-weight: bold; letter-spacing: 1.7px; text-transform: uppercase; margin: 0 0 10px; }
+		h1 { font-family: Georgia, serif; font-weight: normal; font-size: 48px; line-height: 1.12; margin: 0 0 12px; letter-spacing: 0; }
+		.intro p:last-child { color: var(--muted); margin: 0; }
+		.mission-label { border: 1px solid var(--line); padding: 8px 14px; white-space: nowrap; font-size: 13px; }
+		.layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 40px; align-items: stretch; }
+		.space-panel { background: #183e38; color: #fff; padding: 28px; border-radius: 8px; position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 545px; }
+		.space-panel .eyebrow { color: #d7f870; }
+		.space-panel h2 { font-family: Georgia, serif; font-weight: normal; font-size: 31px; line-height: 1.2; margin: 0; max-width: 220px; }
+		.space-art { width: 100%; height: auto; margin: 12px 0; flex: 1; min-height: 240px; }
+		.orbit { transform-origin: 150px 140px; animation: drift 16s ease-in-out infinite alternate; }
+		.mission-note { margin: 0; color: #d4e5dd; font-size: 14px; border-top: 1px solid #53746a; padding-top: 18px; }
+		.mission-note strong { color: #fff; display: block; margin-bottom: 4px; font-size: 15px; }
+		.quiz { padding: 5px 0 0; min-width: 0; }
+		.stats { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; margin-bottom: 13px; }
+		.score { font-weight: bold; background: #e3edd8; padding: 7px 12px; border-radius: 4px; }
+		progress { display: block; width: 100%; height: 7px; border: 0; border-radius: 9px; overflow: hidden; background: #dbe3de; accent-color: var(--green); }
+		progress::-webkit-progress-bar { background: #dbe3de; border-radius: 9px; }
+		progress::-webkit-progress-value { background: var(--green); border-radius: 9px; transition: width .3s ease; }
+		progress::-moz-progress-bar { background: var(--green); }
+		.question-content { padding-top: 29px; }
+		.category { display: inline-block; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.3px; padding: 4px 9px; background: #f7dd8b; margin: 0 0 12px; border-radius: 3px; }
+		.question { font-family: Georgia, serif; font-weight: normal; font-size: 30px; line-height: 1.25; margin: 0 0 23px; min-height: 75px; letter-spacing: 0; outline: none; }
+		.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+		.answer { display: flex; text-align: left; align-items: center; gap: 12px; min-height: 75px; padding: 15px; border: 1px solid #b7c8bf; border-radius: 6px; background: #fff; color: var(--ink); transition: background-color .3s ease, border-color .3s ease, transform .12s ease, box-shadow .12s ease; overflow-wrap: anywhere; }
+		.answer:hover:not(:disabled) { background: #e8f2e3; border-color: var(--green); transform: translateY(-2px); }
+		.answer:active:not(:disabled) { transform: translateY(1px) scale(.99); box-shadow: inset 0 2px 4px #172f2c26; }
+		.answer:focus-visible { outline: 3px solid #1268c4; outline-offset: 3px; box-shadow: 0 0 0 3px #fff; }
+		.letter { flex: 0 0 29px; width: 29px; height: 29px; border-radius: 4px; display: grid; place-items: center; background: #edf2ef; font-size: 12px; font-weight: bold; transition: background-color .3s ease, color .3s ease; }
+		.answer:disabled { opacity: 1; color: var(--ink); }
+		.answer.correct { border: 2px solid #317354; padding: 14px; background: #e2f1d8; animation: pop .35s ease; }
+		.answer.correct .letter { background: #286344; color: white; }
+		.answer.incorrect { border: 2px solid var(--red); padding: 14px; background: #ffe9e8; animation: shake .35s ease; }
+		.answer.incorrect .letter { background: var(--red); color: white; }
+		.answer-text { flex: 1; }
+		.answer-state { font-size: 11px; font-weight: bold; display: block; margin-top: 3px; }
+		.feedback { min-height: 109px; padding: 19px 0 12px; font-size: 14px; }
+		.feedback p { margin: 0; }
+		.feedback strong { display: block; margin-bottom: 4px; font-size: 16px; }
+		.feedback .success { color: #245c3b; }
+		.feedback .error { color: var(--red); }
+		.actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-top: 1px solid var(--line); padding-top: 19px; }
+		.pace { font-size: 12px; color: var(--muted); }
+		.primary { display: inline-flex; gap: 24px; align-items: center; justify-content: center; border: 1px solid var(--ink); border-radius: 5px; background: var(--ink); color: white; padding: 12px 20px; font-weight: bold; min-height: 49px; }
+		.primary:hover:not(:disabled) { background: #31614f; }
+		.primary:disabled { background: #dce4df; color: #596961; border-color: #dce4df; }
+		.results { padding-top: 32px; }
+		.results h2 { font-family: Georgia, serif; font-weight: normal; font-size: 38px; line-height: 1.2; margin: 0 0 15px; outline: none; }
+		.result-number { font-family: Georgia, serif; font-size: 76px; line-height: 1; margin: 22px 0; color: var(--green); }
+		.result-number span { font-size: 25px; color: var(--muted); }
+		.result-copy { color: var(--muted); max-width: 460px; margin-bottom: 25px; }
+		details { border-top: 1px solid var(--line); margin-top: 28px; padding-top: 18px; }
+		summary { cursor: pointer; font-weight: bold; padding: 5px 0; }
+		.review { padding-left: 24px; font-size: 14px; }
+		.review li { margin: 20px 0; padding-left: 5px; }
+		.review strong, .review span { display: block; }
+		.review span { color: var(--muted); margin-top: 4px; }
+		footer { max-width: 1184px; margin: 28px auto 0; padding: 20px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+		@keyframes drift { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+		@keyframes pop { 50% { transform: scale(1.025); } }
+		@keyframes shake { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
+		@media (max-width: 900px) { .topbar { padding: 22px 28px; } main { padding: 32px 28px; } .layout { grid-template-columns: 260px minmax(0, 1fr); gap: 25px; } .answers { grid-template-columns: 1fr; } .space-panel { padding: 22px; } .question { font-size: 27px; } .mission-label { display: none; } }
+		@media (max-width: 640px) { .topbar { padding: 18px 20px; } .brand { font-size: 17px; } .edition { font-size: 10px; letter-spacing: 1px; } main { padding: 28px 20px 0; } h1 { font-size: 38px; } .intro { margin-bottom: 25px; } .intro p:last-child { font-size: 14px; } .layout { grid-template-columns: 1fr; gap: 25px; } .space-panel { min-height: 155px; padding: 22px; justify-content: center; } .space-panel h2 { font-size: 25px; max-width: 185px; } .space-panel .eyebrow { font-size: 10px; } .space-art { position: absolute; width: 160px; height: 150px; right: -15px; top: -5px; margin: 0; min-height: 0; } .mission-note { display: none; } .question { font-size: 27px; min-height: 0; } .question-content { padding-top: 23px; } .answers { gap: 10px; } .answer { min-height: 65px; padding: 12px; } .answer.correct, .answer.incorrect { padding: 11px; } .feedback { min-height: 120px; } .primary { padding: 12px 16px; gap: 15px; } footer { margin-top: 28px; font-size: 9px; letter-spacing: .5px; } }
+		@media (max-width: 360px) { .edition { display: none; } .space-art { right: -40px; opacity: .7; } .pace { max-width: 90px; } }
+		@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+	</style>
+</head>
+<body>
+	<a class="skip" href="#main">퀴즈로 바로 가기</a>
+	<header class="topbar">
+		<div class="brand"><span class="brand-mark" aria-hidden="true">✦</span> 오르빗 아카데미</div>
+		<span class="edition">호기심 가득한 탐험가들</span>
+	</header>
+	<main id="main">
+		<div class="intro">
+			<div><p class="eyebrow">작은 호기심으로 만나는 드넓은 우주</p><h1>우주 탐험</h1><p>열 문제로 떠나는 우주 여행. 어디까지 알고 있나요?</p></div>
+			<span class="mission-label">미션 001 / 미지의 우주로</span>
+		</div>
+		<div class="layout">
+			<aside class="space-panel" aria-label="우주 탐험 삽화">
+				<p class="eyebrow">발사 준비 완료</p>
+				<h2>드넓은 우주,<br>빛나는 호기심.</h2>
+				<svg class="space-art" viewBox="0 0 300 290" role="img" aria-label="짙은 초록빛 우주 속 고리가 있는 주황색 행성과 작은 위성, 별들">
+					<defs><radialGradient id="planet" cx="30%" cy="25%" r="85%"><stop stop-color="#ffcd89"/><stop offset=".55" stop-color="#ff956f"/><stop offset="1" stop-color="#d9514d"/></radialGradient><clipPath id="planetClip"><circle cx="150" cy="140" r="64"/></clipPath></defs>
+					<g fill="#d7f870"><path d="M37 50h10m-5-5v10M242 213h12m-6-6v12M256 64h8m-4-4v8" stroke="#d7f870" stroke-width="2"/><circle cx="65" cy="204" r="2"/><circle cx="193" cy="28" r="2"/><circle cx="112" cy="247" r="2"/><circle cx="279" cy="148" r="1.5"/><circle cx="20" cy="148" r="1.5"/></g>
+					<ellipse cx="150" cy="140" rx="125" ry="105" fill="none" stroke="#6e9a80" stroke-dasharray="3 7" opacity=".55"/>
+					<g class="orbit"><ellipse cx="150" cy="140" rx="115" ry="28" transform="rotate(-28 150 140)" fill="none" stroke="#e9ed9b" stroke-width="17"/><circle cx="150" cy="140" r="64" fill="url(#planet)"/><g clip-path="url(#planetClip)" fill="none" stroke="#ffc492" stroke-width="9" opacity=".6"><path d="M77 106q70 32 148-7M69 129q70 38 162-4M81 168q75 33 140-5"/></g><path d="M47 186c29 24 179-41 206-92" fill="none" stroke="#e9ed9b" stroke-width="16"/><path d="M47 186c29 24 179-41 206-92" fill="none" stroke="#faffd0" stroke-width="3"/></g>
+					<circle cx="245" cy="32" r="17" fill="#b4cbf0"/><circle cx="240" cy="27" r="4" fill="#90acd5"/><circle cx="252" cy="36" r="6" fill="#90acd5"/>
+					<path d="M47 258h38m-19-4v8" stroke="#98b4a3"/>
+				</svg>
+				<p class="mission-note"><strong>마음속에 탐험을 품은 당신에게.</strong>가장 가까운 이웃 천체부터 미지의 우주까지.</p>
+			</aside>
+			<section class="quiz" aria-label="우주 탐험 퀴즈">
+				<div class="stats"><span id="question-count">문제 01 / 10</span><span class="score" id="score">점수: 0 / 10</span></div>
+				<progress id="progress" max="10" value="0" aria-label="답변한 문제 수">10문제 중 0문제</progress>
+				<div id="question-view" class="question-content">
+					<p class="category" id="category"></p>
+					<h2 class="question" id="question" tabindex="-1"></h2>
+					<div class="answers" id="answers" role="group" aria-labelledby="question"></div>
+					<div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+					<div class="actions"><span class="pace">시간 제한 없이 천천히.</span><button class="primary" id="next" disabled>다음 문제 <span aria-hidden="true">→</span></button></div>
+				</div>
+				<div class="results" id="results" hidden>
+					<p class="category">탐험 완료</p>
+					<h2 id="result-title" tabindex="-1"></h2>
+					<p class="result-number" id="result-number"></p>
+					<p class="result-copy" id="result-copy"></p>
+					<button class="primary" id="restart">다시 탐험하기 <span aria-hidden="true">↻</span></button>
+					<details><summary>내 답안 복습하기</summary><ol class="review" id="review"></ol></details>
+				</div>
+				<noscript><p>퀴즈를 풀려면 브라우저에서 자바스크립트를 켜 주세요. 다운로드나 가입 없이 모든 기능이 기기 안에서 실행됩니다.</p></noscript>
+			</section>
+		</div>
+		<footer><span>호기심을 따라, 계속 탐험하세요.</span><span>태양계 · 지구</span></footer>
+	</main>
+	<script>
+		const questions = [
+			{ category: '우리의 우주 이웃', question: "'붉은 행성'이라고 불리는 행성은 무엇일까요?", answers: ['금성', '화성', '목성', '수성'], correct: 1, fact: '화성의 암석과 먼지에 들어 있는 산화 철 때문에 표면이 녹슨 듯한 붉은색으로 보입니다.' },
+			{ category: '인류의 첫걸음', question: '달에 처음 발을 디딘 사람은 누구일까요?', answers: ['유리 가가린', '버즈 올드린', '닐 암스트롱', '샐리 라이드'], correct: 2, fact: '닐 암스트롱은 아폴로 11호 임무 중인 1969년 7월 20일에 달 표면에 첫발을 내디뎠습니다.' },
+			{ category: '가장 가까운 이웃', question: '달이 지구 주위를 계속 공전하게 하는 힘은 무엇일까요?', answers: ['중력', '태양풍', '자기력', '기압'], correct: 0, fact: '지구의 중력이 달의 이동 경로를 휘게 하여, 달이 직선으로 멀어지지 않고 지구 주위를 돌게 합니다.' },
+			{ category: '거대한 행성들', question: '태양계에서 가장 큰 행성은 무엇일까요?', answers: ['지구', '해왕성', '토성', '목성'], correct: 3, fact: '목성은 부피를 기준으로 지구가 1,300개 넘게 들어갈 만큼 거대합니다.' },
+			{ category: '로봇 탐험가', question: '탐사 로버 퍼서비어런스가 2021년에 착륙한 행성은 어디일까요?', answers: ['금성', '화성', '수성', '토성'], correct: 1, fact: '퍼서비어런스는 화성의 예제로 충돌구에 착륙해 지질을 연구하고 고대 미생물의 흔적을 찾고 있습니다.' },
+			{ category: '궤도 위의 생활', question: 'ISS는 어떤 시설의 약자일까요?', answers: ['행성 간 과학 위성', '국제 태양계', '국제 우주 정거장', '성간 우주 왕복선 서비스'], correct: 2, fact: '국제 우주 정거장(ISS)은 지구 궤도를 도는 실험실로, 2000년 11월부터 우주 비행사들이 계속 머물고 있습니다.' },
+			{ category: '우리 곁의 별', question: '태양은 어떤 종류의 천체일까요?', answers: ['항성', '행성', '혜성', '위성'], correct: 0, fact: '태양은 스스로 빛을 내는 항성입니다. 중심부의 핵융합으로 방출되는 에너지가 태양계를 밝히고 따뜻하게 합니다.' },
+			{ category: '익숙한 세계 너머', question: '광년은 무엇을 측정하는 단위일까요?', answers: ['밝기', '시간', '온도', '거리'], correct: 3, fact: '1광년은 빛이 1년 동안 이동하는 거리로, 약 9조 4,600억 킬로미터입니다.' },
+			{ category: '우주를 바라보는 눈', question: '주로 적외선을 관측하기 위해 2021년 12월에 발사된 망원경은 무엇일까요?', answers: ['허블 우주 망원경', '제임스 웹 우주 망원경', '케플러 우주 망원경', '찬드라 엑스선 관측선'], correct: 1, fact: '제임스 웹 우주 망원경은 적외선으로 초기 은하, 탄생 중인 별, 먼 행성을 연구합니다.' },
+			{ category: '새로운 개척지', question: '미국 항공우주국(NASA)의 아르테미스 계획은 무엇을 목표로 할까요?', answers: ['목성에 우주 비행사 착륙시키기', '금성에 도시 건설하기', '인류를 다시 달에 보내기', '지구를 태양 가까이 옮기기'], correct: 2, fact: '아르테미스 계획은 인류를 다시 달에 보내고, 미래의 유인 화성 탐사에 필요한 경험을 쌓는 것을 목표로 합니다.' }
+		];
+		const find = id => document.getElementById(id);
+		let current = 0;
+		let score = 0;
+		let answered = false;
+		let selections = [];
+
+		function renderQuestion(moveFocus = false) {
+			answered = false;
+			const item = questions[current];
+			find('question-count').textContent = `문제 ${String(current + 1).padStart(2, '0')} / ${questions.length}`;
+			find('category').textContent = item.category;
+			find('question').textContent = item.question;
+			find('feedback').replaceChildren();
+			find('next').disabled = true;
+			find('next').firstChild.textContent = current === questions.length - 1 ? '결과 보기 ' : '다음 문제 ';
+			find('answers').replaceChildren();
+			item.answers.forEach((text, index) => {
+				const button = document.createElement('button');
+				button.className = 'answer';
+				const letter = document.createElement('span');
+				letter.className = 'letter';
+				letter.setAttribute('aria-hidden', 'true');
+				letter.textContent = 'ABCD'[index];
+				const label = document.createElement('span');
+				label.className = 'answer-text';
+				label.textContent = text;
+				button.append(letter, label);
+				button.addEventListener('click', () => selectAnswer(index));
+				find('answers').append(button);
+			});
+			if (moveFocus) find('question').focus();
+		}
+
+		function selectAnswer(selected) {
+			if (answered) return;
+			answered = true;
+			selections.push(selected);
+			const item = questions[current];
+			const correct = selected === item.correct;
+			if (correct) score++;
+			const buttons = [...find('answers').children];
+			buttons.forEach((button, index) => {
+				button.disabled = true;
+				if (index === item.correct || (index === selected && !correct)) {
+					button.classList.add(index === item.correct ? 'correct' : 'incorrect');
+					const state = document.createElement('span');
+					state.className = 'answer-state';
+					state.textContent = index === item.correct ? (correct ? '정답 · 내가 고른 답' : '정답') : '오답 · 내가 고른 답';
+					button.querySelector('.answer-text').append(state);
+					button.querySelector('.letter').textContent = index === item.correct ? '✓' : '×';
+				}
+			});
+			find('score').textContent = `점수: ${score} / ${questions.length}`;
+			find('progress').value = current + 1;
+			find('progress').textContent = `${questions.length}문제 중 ${current + 1}문제`;
+			const heading = document.createElement('strong');
+			heading.className = correct ? 'success' : 'error';
+			heading.textContent = correct ? '정답입니다! 멋진 탐험이었어요.' : `아쉬워요! 정답: ${item.answers[item.correct]}`;
+			const fact = document.createElement('p');
+			fact.textContent = item.fact;
+			find('feedback').append(heading, fact);
+			find('next').disabled = false;
+			find('next').focus();
+		}
+
+		function showResults() {
+			find('question-view').hidden = true;
+			find('results').hidden = false;
+			find('question-count').textContent = '10문제 모두 완료';
+			find('result-title').textContent = score >= 8 ? '별처럼 빛나는 실력이에요!' : score >= 5 ? '우주 탐험가로 성장 중이에요!' : '모든 발견은 첫걸음부터!';
+			find('result-number').replaceChildren(document.createTextNode(String(score)));
+			const total = document.createElement('span');
+			total.textContent = ' / 10문제 정답';
+			find('result-number').append(total);
+			find('result-copy').textContent = score >= 8 ? '우주에 대해 정말 잘 알고 있네요. 별을 향한 호기심을 계속 이어 가세요.' : score >= 5 ? '탐험을 위한 기초가 탄탄하네요. 우주에는 아직 발견할 것이 무궁무진해요.' : '우주에 관한 열 가지 사실을 만나 봤어요. 다시 여행하며 얼마나 기억하는지 확인해 보세요.';
+			find('review').replaceChildren();
+			questions.forEach((item, index) => {
+				const entry = document.createElement('li');
+				const heading = document.createElement('strong');
+				heading.textContent = item.question;
+				const answer = document.createElement('span');
+				answer.textContent = `${selections[index] === item.correct ? '정답' : '오답'} · 내가 고른 답: ${item.answers[selections[index]]} / 정답: ${item.answers[item.correct]}`;
+				const fact = document.createElement('span');
+				fact.textContent = item.fact;
+				entry.append(heading, answer, fact);
+				find('review').append(entry);
+			});
+			find('result-title').focus();
+		}
+
+		find('next').addEventListener('click', () => {
+			if (!answered) return;
+			if (current === questions.length - 1) showResults();
+			else { current++; renderQuestion(true); }
+		});
+		find('restart').addEventListener('click', () => {
+			current = 0;
+			score = 0;
+			selections = [];
+			find('progress').value = 0;
+			find('progress').textContent = '10문제 중 0문제';
+			find('score').textContent = '점수: 0 / 10';
+			find('results').hidden = true;
+			find('results').querySelector('details').open = false;
+			find('question-view').hidden = false;
+			renderQuestion(true);
+		});
+		renderQuestion();
+	</script>
+</body>
+</html>
